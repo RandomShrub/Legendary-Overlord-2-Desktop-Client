@@ -118,17 +118,31 @@ def open_terminal():
     term.mainloop()
 
 
-def validate_index(P):
-    if str.isdigit(P):
-        return True
-    else:
-        return False
-
-
 def activate_dimmer():
-    print('do')
+    global active_dimmer
+    try:
+        index_int = int(index_text.get())
+    except ValueError:
+        index_int = -1
+        index_text.set(0)
+        pass
+
+    if 0 <= index_int <= 255:
+        active_dimmer = index_int
+        dimmerStatus.set('Active Dimmer: ' + str(active_dimmer))
+
+
+def save_dimmer():
+    print('Saving, todo')
+
+
+def blink_test():
+    print('Blink test, todo')
+
 
 port_list = serial_ports()
+
+active_dimmer = -1
 
 root = Tk()
 
@@ -137,10 +151,19 @@ root.title('Legendary Overlord 2 Configurator')
 
 selected_port = StringVar()
 selected_port.set(port_list[0])
+
 connectionStatus = StringVar()
 connectionStatus.set('Status: Not connected')
+
 dimmerStatus = StringVar()
 dimmerStatus.set('No active dimmer')
+
+enabled_var = IntVar()
+bipolar_var = IntVar()
+inverse_var = IntVar()
+
+method_text = StringVar()
+pin_text = StringVar()
 
 # Top menu bar construction
 
@@ -169,28 +192,50 @@ index_text = StringVar()
 dimmer_text = StringVar()
 
 
-edit_dimmers_label = Label(root, text='Edit Dimmers')
+edit_dimmers_label = Label(root, text='Edit Dimmers', relief=SUNKEN)
 dim_id_label = Label(root, text='Dimmer')
+pin_label = Label(root, text='Pin')
+method_label = Label(root, text='Method')
 
-validate_index_cmd = (root.register(validate_index), '%P')
 
-index_spinner = Spinbox(root, from_=0, to=127, textvariable=index_text)
+index_spinner = Spinbox(root, from_=0, to=127, width=8, textvariable=index_text)
+pin_spinner = Spinbox(root, from_=0, to=53, width=8, textvariable=pin_text)
+method_spinner = Spinbox(root, from_=0, to=15, width=8, textvariable=method_text)
 
-activate_button = Button(root, text='Activate')
-activate_button.bind(activate_dimmer)
+activate_button = Button(root, text='Activate', command=activate_dimmer)
 
-edit_dimmers_label.grid(row=0, columnspan=3, sticky=W+E+S)
+save_button = Button(root, text='Save', command=save_dimmer)
+
+test_button = Button(root, text='Blink', command=blink_test)
+
+enabled_cb = Checkbutton(root, text='Enabled', variable=enabled_var)
+bipolar_cb = Checkbutton(root, text='Bipolar', variable=bipolar_var)
+inverse_cb = Checkbutton(root, text='Inverse', variable=inverse_var)
+
+edit_dimmers_label.grid(row=0, columnspan=4, sticky=W+E+S)
 
 dim_id_label.grid(row=1, padx=5, pady=5, sticky=NW)
-index_spinner.grid(row=2, columnspan=2, padx=5, pady=5, sticky=NW)
-activate_button.grid(row=3, columnspan=2, padx=5, pady=5, sticky=W+E+S)
+index_spinner.grid(row=2, padx=5, pady=5, sticky=NW)
+activate_button.grid(row=3, padx=5, pady=5, sticky=W+E+S)
+
+enabled_cb.grid(row=1, column=3, pady=5, sticky=NW)
+bipolar_cb.grid(row=2, column=3, pady=5, sticky=NW)
+inverse_cb.grid(row=3, column=3, pady=5, sticky=NW)
+
+pin_label.grid(row=1, column=1, padx=5, pady=5, sticky=NW)
+pin_spinner.grid(row=2, column=1, padx=5, pady=5, sticky=NW)
+save_button.grid(row=3, column=1, padx=5, pady=5, sticky=W+E+S)
+
+method_label.grid(row=1, column=2, padx=5, pady=5, sticky=NW)
+method_spinner.grid(row=2, column=2, padx=5, pady=5, sticky=NW)
+test_button.grid(row=3, column=2, padx=5, pady=5, sticky=W+E+S)
 
 
 # Status bar
 
 connection_status = Label(root, textvariable=connectionStatus, bd=1, relief=SUNKEN, anchor=W)
 port_status = Label(root, textvariable=selected_port, bd=1, relief=SUNKEN, anchor=W)
-dimmer_status = Label(root, textvariable=dimmerStatus, bd=1, relief=SUNKEN, anchor=W)
+dimmer_status = Label(root, width=15, textvariable=dimmerStatus, bd=1, relief=SUNKEN, anchor=W)
 
 connection_status.grid(row=4, columnspan=2, sticky=W+E+S)
 port_status.grid(row=4, column=2, columnspan=2, sticky=W+E+S)

@@ -50,10 +50,10 @@ class LegoSerial:
         self.send_data(data)
         time.sleep(timeout)  # The microcontroller should reply within 10 ms. 150 ms is plenty of time.
 
-        inData = self.ser.read(self.ser.inWaiting())
+        in_data = self.ser.read(self.ser.inWaiting())
         values = []
 
-        for char in inData:
+        for char in in_data:
             values.append(char)
 
         return values

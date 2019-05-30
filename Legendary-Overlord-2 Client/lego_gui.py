@@ -2,7 +2,9 @@ from tkinter import *
 import glob
 import serial
 import lego_serial as ls
+import lego_arrays as la
 import lego_command_line as lcl
+import time
 
 ser = ls.LegoSerial('none')
 
@@ -101,8 +103,8 @@ def open_terminal():
     term.title('LegO 2 Terminal')
 
     history_str = StringVar()
-    history_str.set('')
     entry = StringVar()
+    history_str.set('This terminal is obsolete, and while it works, there is a lack of communication with the user.')
 
     history_box = Label(term, textvariable=history_str, anchor=NW, bg='white', fg='black', justify=LEFT, relief=SUNKEN)
     entry_box = Entry(term, textvariable=entry)
@@ -119,13 +121,27 @@ def open_terminal():
 
 
 def activate_dimmer():
+    if not ser.ser.is_open:
+        dimmerStatus.set('Error: No Connection')
+        return
+
     global active_dimmer
+
     try:
         index_int = int(index_text.get())
     except ValueError:
-        index_int = -1
         index_text.set(0)
-        pass
+        return
+
+    try:
+        pin_text.set(str(ser.get_response(la.get_dimmer_property(active_dimmer, 'pin'))))
+        method_text.set(str(ser.get_response(la.get_dimmer_property(active_dimmer, 'method')[0])))
+        enabled_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'enabled')[0]))
+        bipolar_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'bipolar')[0]))
+        inverse_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'inverse')[0]))
+    except IndexError:
+        dimmerStatus.set('Connection Error')
+        return
 
     if 0 <= index_int <= 255:
         active_dimmer = index_int
@@ -133,14 +149,35 @@ def activate_dimmer():
 
 
 def save_dimmer():
-    print('Saving, todo')
+    if active_dimmer == -1 or not ser.ser.is_open:
+        return
+
+    try:
+        ser.send_data(la.set_dimmer_property(active_dimmer, 'pin', int(pin_text.get())))
+        ser.send_data(la.set_dimmer_property(active_dimmer, 'method', int(method_text.get())))
+    except ValueError:
+        pass
+
+    ser.send_data(la.set_dimmer_property(active_dimmer, 'enabled', enabled_var.get()))
+    ser.send_data(la.set_dimmer_property(active_dimmer, 'bipolar', bipolar_var.get()))
+    ser.send_data(la.set_dimmer_property(active_dimmer, 'inverse', inverse_var.get()))
 
 
 def blink_test():
-    print('Blink test, todo')
+    if active_dimmer == -1 or not ser.ser.is_open:
+        return
+
+    ser.send_data(la.set_dimmer_level(active_dimmer, 255))
+
+    time.sleep(1)
+
+    ser.send_data(la.set_dimmer_level(active_dimmer, 0))
 
 
 port_list = serial_ports()
+
+if len(port_list) == 0:
+    port_list.append('(none)')
 
 active_dimmer = -1
 
@@ -235,7 +272,7 @@ test_button.grid(row=3, column=2, padx=5, pady=5, sticky=W+E+S)
 
 connection_status = Label(root, textvariable=connectionStatus, bd=1, relief=SUNKEN, anchor=W)
 port_status = Label(root, textvariable=selected_port, bd=1, relief=SUNKEN, anchor=W)
-dimmer_status = Label(root, width=15, textvariable=dimmerStatus, bd=1, relief=SUNKEN, anchor=W)
+dimmer_status = Label(root, width=17, textvariable=dimmerStatus, bd=1, relief=SUNKEN, anchor=W)
 
 connection_status.grid(row=4, columnspan=2, sticky=W+E+S)
 port_status.grid(row=4, column=2, columnspan=2, sticky=W+E+S)

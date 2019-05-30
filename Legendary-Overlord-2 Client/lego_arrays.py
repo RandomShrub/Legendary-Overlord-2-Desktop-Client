@@ -64,6 +64,19 @@ def set_dimmer_property(dimmers, prop, values):
     return data
 
 
+def get_dimmer_property(dimmers, prop):
+    if type(dimmers) != list:
+        dimmers = [dimmers]
+
+    data = [2, 3, property_name_to_id(prop), len(dimmers)]
+
+    for dimmer in dimmers:
+        data.append(dimmer)
+
+    data.insert(0, len(data))
+    return data
+
+
 def property_name_to_id(prop):
     prop = str.lower(prop)
     if prop == 'pin':

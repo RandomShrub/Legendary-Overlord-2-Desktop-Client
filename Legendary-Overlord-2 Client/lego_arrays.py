@@ -88,4 +88,4 @@ def property_name_to_id(prop):
     elif prop == 'inverse':
         return 3
     elif prop == 'method':
-        return 4
+        return 5

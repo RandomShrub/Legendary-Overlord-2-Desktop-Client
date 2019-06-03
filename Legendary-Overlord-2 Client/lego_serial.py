@@ -14,10 +14,6 @@ class LegoSerial:
             self.ser.open()
         except (OSError, serial.SerialException):
             pass
-        if self.ser.is_open:
-            print("Successfully opened the serial port.")
-        else:
-            print("Failed to open the serial port. Make sure the device is connected and the port is not busy.")
 
     def close_serial(self):
         self.ser.close()
@@ -37,10 +33,10 @@ class LegoSerial:
             print('Data length is: ' + str(len(data_str)))
             print(data_str)
 
-    def get_response(self, data, sendDelay=0, timeout=0.15):
+    def get_response(self, data, send_delay=0, timeout=0.15):
         """Sends data and waits a little while for a response. Then encodes to an int array"""
 
-        time.sleep(sendDelay)
+        time.sleep(send_delay)
 
         if not self.ser.is_open:
             return

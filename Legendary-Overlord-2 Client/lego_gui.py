@@ -59,7 +59,7 @@ def attempt_connect():
     ser.open_serial()
     if ser.ser.is_open:
         connectionStatus.set('Status: Checking connection...')
-        if ser.get_response([1, 0], sendDelay=2) == [1, 6]:
+        if ser.get_response([1, 0], send_delay=2) == [1, 6]:
             connectionStatus.set('Status: Connected!')
         else:
             connectionStatus.set('Status: Unknown device.')
@@ -75,7 +75,6 @@ def disconnect_serial():
 
 def port_changed():
     disconnect_serial()
-    print(selected_port.get())
 
 
 def open_terminal():
@@ -133,19 +132,20 @@ def activate_dimmer():
         index_text.set(0)
         return
 
+    if 0 <= index_int <= 255:
+        active_dimmer = index_int
+
     try:
-        pin_text.set(str(ser.get_response(la.get_dimmer_property(active_dimmer, 'pin'))))
-        method_text.set(str(ser.get_response(la.get_dimmer_property(active_dimmer, 'method')[0])))
-        enabled_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'enabled')[0]))
-        bipolar_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'bipolar')[0]))
-        inverse_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'inverse')[0]))
+        pin_text.set(str(ser.get_response(la.get_dimmer_property(active_dimmer, 'pin'), timeout=.01)[1]))
+        method_text.set(str(ser.get_response(la.get_dimmer_property(active_dimmer, 'method'), timeout=0.01)[1]))
+        enabled_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'enabled'), timeout=0.01)[1])
+        bipolar_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'bipolar'), timeout=0.01)[1])
+        inverse_var.set(ser.get_response(la.get_dimmer_property(active_dimmer, 'inverse'), timeout=0.01)[1])
     except IndexError:
         dimmerStatus.set('Connection Error')
         return
 
-    if 0 <= index_int <= 255:
-        active_dimmer = index_int
-        dimmerStatus.set('Active Dimmer: ' + str(active_dimmer))
+    dimmerStatus.set('Active Dimmer: ' + str(active_dimmer))
 
 
 def save_dimmer():
@@ -182,6 +182,8 @@ if len(port_list) == 0:
 active_dimmer = -1
 
 root = Tk()
+
+root.resizable(False, False)
 
 
 root.title('Legendary Overlord 2 Configurator')
